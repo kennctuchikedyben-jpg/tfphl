@@ -136,6 +136,7 @@ fn render_goalie_leaders(f: &mut Frame, state: &AppState, area: Rect) {
         rows.push(Row::new(vec![
             Cell::from(goalie.rank.to_string()),
             Cell::from(goalie.name.clone()),
+            Cell::from(goalie.jersey.clone()),
             Cell::from(Span::styled(goalie.team.clone(), team_style)),
             Cell::from(goalie.gp.to_string()),
             Cell::from(Span::styled(goalie.w.to_string(), Style::default().fg(Color::Green))),
@@ -147,12 +148,13 @@ fn render_goalie_leaders(f: &mut Frame, state: &AppState, area: Rect) {
         ]));
     }
 
-    let header = Row::new(vec!["Rk", "Name", "Team", "GP", "W", "L", "OTL", "GAA", "SV%", "SO"])
+    let header = Row::new(vec!["Rk", "Name", "#", "Team", "GP", "W", "L", "OTL", "GAA", "SV%", "SO"])
         .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
 
     let widths = [
         Constraint::Length(4),
-        Constraint::Min(22),
+        Constraint::Min(20),
+        Constraint::Length(4),
         Constraint::Length(24),
         Constraint::Length(5),
         Constraint::Length(5),

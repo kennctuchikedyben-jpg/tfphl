@@ -22,6 +22,7 @@ pub struct SkaterLeader {
 pub struct GoalieLeader {
     pub rank: u32,
     pub name: String,
+    pub jersey: String,
     pub team: String,
     pub gp: u32,
     pub w: u32,

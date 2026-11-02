@@ -344,9 +344,9 @@ impl HockeyShiftClient {
                 let points: u32 = tds[8].text().collect::<String>().trim().parse().unwrap_or(0);
                 let ppga = tds[9].text().collect::<String>().trim().to_string();
                 let pim: u32 = tds[10].text().collect::<String>().trim().parse().unwrap_or(0);
-                let gwg: u32 = tds[13].text().collect::<String>().trim().parse().unwrap_or(0);
-                let plus_minus = tds[14].text().collect::<String>().trim().to_string();
-                let sog: u32 = tds[15].text().collect::<String>().trim().parse().unwrap_or(0);
+                let gwg: u32 = tds.get(14).and_then(|t| t.text().collect::<String>().trim().parse().ok()).unwrap_or(0);
+                let plus_minus = tds.get(15).map(|t| t.text().collect::<String>().trim().to_string()).unwrap_or_default();
+                let sog: u32 = tds.get(16).and_then(|t| t.text().collect::<String>().trim().parse().ok()).unwrap_or(0);
 
                 leaders.push(SkaterLeader {
                     rank,
@@ -404,7 +404,7 @@ impl HockeyShiftClient {
 
         for tr in document.select(&tr_selector) {
             let tds: Vec<_> = tr.select(&td_selector).collect();
-            if tds.len() >= 10 {
+            if tds.len() >= 15 {
                 let rank: u32 = tds[0].text().collect::<String>().trim().parse().unwrap_or(0);
                 if rank == 0 {
                     continue;
@@ -416,23 +416,26 @@ impl HockeyShiftClient {
                     .map(|a| a.text().collect::<String>().trim().to_string())
                     .unwrap_or_else(|| tds[1].text().collect::<String>().trim().to_string());
 
-                let team = tds[2]
+                let jersey = tds[2].text().collect::<String>().trim().to_string();
+
+                let team = tds[3]
                     .select(&a_team_selector)
                     .next()
                     .map(|a| a.text().collect::<String>().trim().to_string())
-                    .unwrap_or_else(|| tds[2].text().collect::<String>().trim().to_string());
+                    .unwrap_or_else(|| tds[3].text().collect::<String>().trim().to_string());
 
-                let gp: u32 = tds[3].text().collect::<String>().trim().parse().unwrap_or(0);
-                let w: u32 = tds[4].text().collect::<String>().trim().parse().unwrap_or(0);
-                let l: u32 = tds[5].text().collect::<String>().trim().parse().unwrap_or(0);
-                let otl: u32 = tds[6].text().collect::<String>().trim().parse().unwrap_or(0);
-                let gaa = tds[8].text().collect::<String>().trim().to_string();
-                let sv_pct = tds[10].text().collect::<String>().trim().to_string();
-                let so: u32 = tds.get(11).and_then(|td| td.text().collect::<String>().trim().parse().ok()).unwrap_or(0);
+                let gp: u32 = tds[4].text().collect::<String>().trim().parse().unwrap_or(0);
+                let w: u32 = tds[5].text().collect::<String>().trim().parse().unwrap_or(0);
+                let l: u32 = tds[6].text().collect::<String>().trim().parse().unwrap_or(0);
+                let otl: u32 = tds[8].text().collect::<String>().trim().parse().unwrap_or(0);
+                let gaa = tds[11].text().collect::<String>().trim().to_string();
+                let sv_pct = tds[13].text().collect::<String>().trim().to_string();
+                let so: u32 = tds.get(14).and_then(|td| td.text().collect::<String>().trim().parse().ok()).unwrap_or(0);
 
                 leaders.push(GoalieLeader {
                     rank,
                     name,
+                    jersey,
                     team,
                     gp,
                     w,

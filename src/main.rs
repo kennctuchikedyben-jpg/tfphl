@@ -297,4 +297,22 @@ mod tests {
         let list = skaters.unwrap();
         assert!(!list.is_empty(), "Skaters list was empty");
     }
+
+    #[tokio::test]
+    async fn test_goalie_leaders_parsing() {
+        let mut client = HockeyShiftClient::new();
+        let goalies_res = client.fetch_goalie_leaders().await;
+        assert!(goalies_res.is_ok(), "Failed to fetch goalies: {:?}", goalies_res.err());
+        let goalies = goalies_res.unwrap();
+        assert!(!goalies.is_empty(), "Goalies list was empty");
+
+        let first = &goalies[0];
+        assert_eq!(first.rank, 1);
+        assert!(!first.name.is_empty());
+        assert!(!first.team.is_empty());
+        // Verify team name contains letters, not just jersey number
+        assert!(first.team.chars().any(|c| c.is_alphabetic()), "Goalie team should contain letters, got: {}", first.team);
+        assert!(!first.gaa.is_empty());
+        assert!(!first.sv_pct.is_empty());
+    }
 }
