@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::state::app_state::AppState;
+use crate::state::app_state::{AppState, is_favorite_team};
 
 pub fn render_standings(f: &mut Frame, state: &AppState, area: Rect) {
     if state.divisions.is_empty() {
@@ -32,14 +32,12 @@ pub fn render_standings(f: &mut Frame, state: &AppState, area: Rect) {
         .constraints(constraints)
         .split(area);
 
-    let fav_team = state.config.favorite_team.as_deref().unwrap_or("");
-
     for (div_idx, division) in state.divisions.iter().enumerate() {
         let is_selected_div = div_idx == state.selected_division_idx;
 
         let mut rows = Vec::new();
         for row in &division.rows {
-            let is_fav = !fav_team.is_empty() && (row.team_short.eq_ignore_ascii_case(fav_team) || row.team_name.contains(fav_team));
+            let is_fav = is_favorite_team(state.config.favorite_team.as_deref(), &row.team_short, &row.team_name);
 
             let team_style = if is_fav {
                 Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)

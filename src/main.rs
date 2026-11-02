@@ -223,13 +223,30 @@ mod tests {
     use state::config::Config;
 
     #[test]
-    fn test_config_default_is_brk() {
+    fn test_config_default_is_bkf() {
         let def = Config::default();
         assert_eq!(
             def.favorite_team,
-            Some("BRK".to_string()),
-            "Default favorite team should be BRK (Baton Rouge Kingfish)"
+            Some("BKF".to_string()),
+            "Default favorite team should be BKF (Baton Rouge Kingfish)"
         );
+    }
+
+    #[test]
+    fn test_bkf_favorite_matching() {
+        use state::app_state::is_favorite_team;
+
+        // Exact code match
+        assert!(is_favorite_team(Some("BKF"), "BKF", "Baton Rouge Kingfish"));
+        // Legacy alias match
+        assert!(is_favorite_team(Some("BRK"), "BKF", "Baton Rouge Kingfish"));
+        assert!(is_favorite_team(Some("BKF"), "BRK", "Baton Rouge Kingfish"));
+        // Name-based match (case insensitive)
+        assert!(is_favorite_team(Some("BKF"), "", "Baton Rouge Kingfish"));
+        assert!(is_favorite_team(Some("BKF"), "", "Kingfish"));
+        // Non-match
+        assert!(!is_favorite_team(Some("BKF"), "BBB", "Binghamton Black Bears"));
+        assert!(!is_favorite_team(None, "BKF", "Baton Rouge Kingfish"));
     }
 
     #[test]
@@ -240,8 +257,8 @@ mod tests {
         let loaded = Config::load();
         assert_eq!(loaded.favorite_team, Some("MCR".to_string()));
 
-        // Restore back to BRK
-        cfg.favorite_team = Some("BRK".to_string());
+        // Restore back to BKF
+        cfg.favorite_team = Some("BKF".to_string());
         let _ = cfg.save();
     }
 

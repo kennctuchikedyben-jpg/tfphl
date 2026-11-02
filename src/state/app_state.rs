@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub const FPHL_TEAMS: &[(&str, &str)] = &[
-    ("BRK", "Baton Rouge Kingfish"),
+    ("BKF", "Baton Rouge Kingfish"),
     ("BBB", "Binghamton Black Bears"),
     ("BRB", "Blue Ridge Bobcats"),
     ("TCT", "Twin City Thunderbirds"),
@@ -22,7 +22,7 @@ pub const FPHL_TEAMS: &[(&str, &str)] = &[
     ("IND", "Indiana Sentinels"),
     ("MSM", "Mid-South Monarchs"),
     ("MNL", "Minnesota Northern Lights"),
-    ("MMC", "Monroe Moccasins"),
+    ("MRM", "Monroe Moccasins"),
     ("MCR", "Motor City Rockers"),
     ("OCS", "Oceanside Shock"),
     ("PHP", "Port Huron Prowlers"),
@@ -31,6 +31,38 @@ pub const FPHL_TEAMS: &[(&str, &str)] = &[
     ("WTW", "Watertown Wolves"),
     ("", "None (Clear favorite)"),
 ];
+
+pub fn is_favorite_team(fav: Option<&str>, team_short: &str, team_name: &str) -> bool {
+    let fav_code = match fav {
+        Some(f) if !f.is_empty() => f,
+        _ => return false,
+    };
+
+    // Normalize BKF / BRK alias
+    let norm_fav = if fav_code.eq_ignore_ascii_case("BRK") { "BKF" } else { fav_code };
+    let norm_short = if team_short.eq_ignore_ascii_case("BRK") { "BKF" } else { team_short };
+
+    if norm_short.eq_ignore_ascii_case(norm_fav) {
+        return true;
+    }
+
+    // Check if team name matches or contains the name associated with the favorite code
+    if let Some(&(_, full_name)) = FPHL_TEAMS.iter().find(|(code, _)| code.eq_ignore_ascii_case(norm_fav)) {
+        if !full_name.is_empty() {
+            if team_name.eq_ignore_ascii_case(full_name) || team_name.contains(full_name) || full_name.contains(team_name) {
+                return true;
+            }
+            // Check nickname (e.g. Kingfish, Black Bears, Sentinels)
+            if let Some(nickname) = full_name.split_whitespace().last() {
+                if team_name.contains(nickname) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    false
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {

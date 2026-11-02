@@ -14,7 +14,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            favorite_team: Some("BRK".to_string()),
+            favorite_team: Some("BKF".to_string()),
             timezone: "US/Eastern".to_string(),
             log_level: "error".to_string(),
         }
@@ -32,7 +32,12 @@ impl Config {
         if let Some(path) = Self::config_path() {
             if path.exists() {
                 if let Ok(content) = fs::read_to_string(&path) {
-                    if let Ok(cfg) = toml::from_str::<Config>(&content) {
+                    if let Ok(mut cfg) = toml::from_str::<Config>(&content) {
+                        // Migrate legacy BRK code to BKF
+                        if cfg.favorite_team.as_deref() == Some("BRK") {
+                            cfg.favorite_team = Some("BKF".to_string());
+                            let _ = cfg.save();
+                        }
                         return cfg;
                     }
                 }

@@ -79,12 +79,12 @@ log_level = "error"       # Logging verbosity
 ```
 
 ### Supported FPHL Teams & Codes
+- `BKF` — Baton Rouge Kingfish
 - `BBB` — Binghamton Black Bears
 - `BRB` — Blue Ridge Bobcats
-- `TCT` — Carolina / Twin City Thunderbirds
+- `TCT` — Twin City Thunderbirds
 - `DHT` — Danbury Hat Tricks
-- `BRK` — Baton Rouge Kingfish
-- `MMC` — Monroe Moccasins
+- `MMC` / `MRM` — Monroe Moccasins
 - `MSM` — Mid-South Monarchs
 - `MNL` — Minnesota Northern Lights
 - `PHP` — Port Huron Prowlers

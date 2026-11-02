@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::state::app_state::{AppState, LeadersTab};
+use crate::state::app_state::{AppState, LeadersTab, is_favorite_team};
 
 pub fn render_leaders(f: &mut Frame, state: &AppState, area: Rect) {
     let chunks = Layout::default()
@@ -55,11 +55,10 @@ fn render_skater_leaders(f: &mut Frame, state: &AppState, area: Rect) {
         return;
     }
 
-    let fav_team = state.config.favorite_team.as_deref().unwrap_or("");
     let mut rows = Vec::new();
 
     for skater in state.skaters.iter().take(30) {
-        let is_fav = !fav_team.is_empty() && skater.team.contains(fav_team);
+        let is_fav = is_favorite_team(state.config.favorite_team.as_deref(), "", &skater.team);
         let team_style = if is_fav {
             Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
         } else {
@@ -124,11 +123,10 @@ fn render_goalie_leaders(f: &mut Frame, state: &AppState, area: Rect) {
         return;
     }
 
-    let fav_team = state.config.favorite_team.as_deref().unwrap_or("");
     let mut rows = Vec::new();
 
     for goalie in state.goalies.iter().take(25) {
-        let is_fav = !fav_team.is_empty() && goalie.team.contains(fav_team);
+        let is_fav = is_favorite_team(state.config.favorite_team.as_deref(), "", &goalie.team);
         let team_style = if is_fav {
             Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
         } else {

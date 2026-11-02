@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::state::app_state::AppState;
+use crate::state::app_state::{AppState, is_favorite_team};
 
 pub fn render_games(f: &mut Frame, state: &AppState, area: Rect) {
     let games = state.games_for_current_date();
@@ -29,7 +29,6 @@ pub fn render_games(f: &mut Frame, state: &AppState, area: Rect) {
         .split(area);
 
     // Left column: Game Matchup Cards
-    let fav_team = state.config.favorite_team.as_deref().unwrap_or("");
     let card_height = 5;
     let visible_cards = (chunks[0].height as usize / card_height).max(1);
 
@@ -62,8 +61,8 @@ pub fn render_games(f: &mut Frame, state: &AppState, area: Rect) {
             Style::default().fg(Color::DarkGray)
         };
 
-        let away_is_fav = !fav_team.is_empty() && (game.away_team_short.eq_ignore_ascii_case(fav_team) || game.away_team.contains(fav_team));
-        let home_is_fav = !fav_team.is_empty() && (game.home_team_short.eq_ignore_ascii_case(fav_team) || game.home_team.contains(fav_team));
+        let away_is_fav = is_favorite_team(state.config.favorite_team.as_deref(), &game.away_team_short, &game.away_team);
+        let home_is_fav = is_favorite_team(state.config.favorite_team.as_deref(), &game.home_team_short, &game.home_team);
 
         let away_style = if away_is_fav {
             Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
