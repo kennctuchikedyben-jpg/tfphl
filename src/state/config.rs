@@ -1,9 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
+use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Config {
     pub favorite_team: Option<String>,
     pub timezone: String,
@@ -13,7 +14,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            favorite_team: Some("BBB".to_string()),
+            favorite_team: Some("BRK".to_string()),
             timezone: "US/Eastern".to_string(),
             log_level: "error".to_string(),
         }
@@ -36,17 +37,24 @@ impl Config {
                     }
                 }
             } else {
-                // Try writing default config
-                if let Some(parent) = path.parent() {
-                    let _ = fs::create_dir_all(parent);
-                }
                 let def = Config::default();
-                if let Ok(serialized) = toml::to_string_pretty(&def) {
-                    let _ = fs::write(&path, serialized);
-                }
+                let _ = def.save();
                 return def;
             }
         }
         Config::default()
+    }
+
+    pub fn save(&self) -> Result<()> {
+        if let Some(path) = Self::config_path() {
+            if let Some(parent) = path.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            let serialized = toml::to_string_pretty(self)
+                .context("Failed to serialize config to TOML")?;
+            fs::write(&path, serialized)
+                .context("Failed to write config file")?;
+        }
+        Ok(())
     }
 }

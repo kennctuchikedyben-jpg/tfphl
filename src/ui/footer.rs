@@ -33,6 +33,8 @@ pub fn render_footer(f: &mut Frame, state: &AppState, area: Rect) {
             Span::raw(" Boxscore  "),
             Span::styled("[Tab]", Style::default().fg(Color::Yellow)),
             Span::raw(" Toggle  "),
+            Span::styled("[f]", Style::default().fg(Color::Yellow)),
+            Span::raw(" Fav Team  "),
             Span::styled("[r]", Style::default().fg(Color::Yellow)),
             Span::raw(" Refresh  "),
             Span::styled("[?]", Style::default().fg(Color::Yellow)),

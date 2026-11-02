@@ -11,6 +11,27 @@ use crate::{
     state::config::Config,
 };
 
+pub const FPHL_TEAMS: &[(&str, &str)] = &[
+    ("BRK", "Baton Rouge Kingfish"),
+    ("BBB", "Binghamton Black Bears"),
+    ("BRB", "Blue Ridge Bobcats"),
+    ("TCT", "Twin City Thunderbirds"),
+    ("CRD", "Columbus River Dragons"),
+    ("DHT", "Danbury Hat Tricks"),
+    ("FRF", "Fresno Falcons"),
+    ("IND", "Indiana Sentinels"),
+    ("MSM", "Mid-South Monarchs"),
+    ("MNL", "Minnesota Northern Lights"),
+    ("MMC", "Monroe Moccasins"),
+    ("MCR", "Motor City Rockers"),
+    ("OCS", "Oceanside Shock"),
+    ("PHP", "Port Huron Prowlers"),
+    ("SCK", "Stockton Thunder"),
+    ("TOP", "Topeka Scarecrows"),
+    ("WTW", "Watertown Wolves"),
+    ("", "None (Clear favorite)"),
+];
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
     Games,
@@ -41,6 +62,8 @@ pub struct AppState {
     pub boxscore_data: Option<GameBoxscore>,
     pub boxscore_loading: bool,
     pub show_help: bool,
+    pub show_team_picker: bool,
+    pub team_picker_idx: usize,
     pub loading: bool,
     pub error_message: Option<String>,
 }
@@ -64,6 +87,8 @@ impl AppState {
             boxscore_data: None,
             boxscore_loading: false,
             show_help: false,
+            show_team_picker: false,
+            team_picker_idx: 0,
             loading: true,
             error_message: None,
         }
@@ -85,7 +110,6 @@ impl AppState {
         if let Some(pos) = self.dates.iter().position(|d| d == &today) {
             self.current_date_idx = pos;
         } else if !self.dates.is_empty() {
-            // Find the most recent date with played or scheduled games
             let pos = self
                 .dates
                 .iter()
@@ -194,5 +218,41 @@ impl AppState {
             LeadersTab::Goalies => LeadersTab::Skaters,
         };
         self.selected_leader_idx = 0;
+    }
+
+    pub fn open_team_picker(&mut self) {
+        self.show_team_picker = true;
+        // Position on current favorite team if set
+        if let Some(ref fav) = self.config.favorite_team {
+            if let Some(idx) = FPHL_TEAMS.iter().position(|(code, _)| code == fav) {
+                self.team_picker_idx = idx;
+                return;
+            }
+        }
+        self.team_picker_idx = 0;
+    }
+
+    pub fn select_next_team(&mut self) {
+        if self.team_picker_idx + 1 < FPHL_TEAMS.len() {
+            self.team_picker_idx += 1;
+        }
+    }
+
+    pub fn select_prev_team(&mut self) {
+        if self.team_picker_idx > 0 {
+            self.team_picker_idx -= 1;
+        }
+    }
+
+    pub fn confirm_team_selection(&mut self) {
+        if let Some(&(code, _)) = FPHL_TEAMS.get(self.team_picker_idx) {
+            if code.is_empty() {
+                self.config.favorite_team = None;
+            } else {
+                self.config.favorite_team = Some(code.to_string());
+            }
+            let _ = self.config.save();
+        }
+        self.show_team_picker = false;
     }
 }

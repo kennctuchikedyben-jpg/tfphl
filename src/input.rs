@@ -31,10 +31,33 @@ pub fn handle_key(key: KeyEvent, state: &mut AppState) -> Action {
         return Action::None;
     }
 
+    if state.show_team_picker {
+        match key.code {
+            KeyCode::Esc | KeyCode::Char('q') => {
+                state.show_team_picker = false;
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                state.select_next_team();
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                state.select_prev_team();
+            }
+            KeyCode::Enter => {
+                state.confirm_team_selection();
+            }
+            _ => {}
+        }
+        return Action::None;
+    }
+
     match key.code {
         KeyCode::Char('q') => Action::Quit,
         KeyCode::Char('?') => {
             state.show_help = true;
+            Action::None
+        }
+        KeyCode::Char('f') => {
+            state.open_team_picker();
             Action::None
         }
         KeyCode::Char('r') => Action::RefreshAll,

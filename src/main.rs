@@ -220,6 +220,30 @@ fn trigger_full_refresh(tx: &mpsc::Sender<DataEvent>) {
 mod tests {
     use super::*;
     use api::client::HockeyShiftClient;
+    use state::config::Config;
+
+    #[test]
+    fn test_config_default_is_brk() {
+        let def = Config::default();
+        assert_eq!(
+            def.favorite_team,
+            Some("BRK".to_string()),
+            "Default favorite team should be BRK (Baton Rouge Kingfish)"
+        );
+    }
+
+    #[test]
+    fn test_config_save_load() {
+        let mut cfg = Config::default();
+        cfg.favorite_team = Some("MCR".to_string());
+        assert!(cfg.save().is_ok());
+        let loaded = Config::load();
+        assert_eq!(loaded.favorite_team, Some("MCR".to_string()));
+
+        // Restore back to BRK
+        cfg.favorite_team = Some("BRK".to_string());
+        let _ = cfg.save();
+    }
 
     #[tokio::test]
     async fn test_auth_login() {

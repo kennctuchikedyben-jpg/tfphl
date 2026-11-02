@@ -7,7 +7,7 @@ use crate::{
     state::app_state::{AppState, Tab},
     ui::{
         boxscore::render_boxscore, footer::render_footer, games::render_games, header::render_header,
-        help::render_help, leaders::render_leaders, standings::render_standings,
+        help::render_help, leaders::render_leaders, standings::render_standings, team_picker::render_team_picker,
     },
 };
 
@@ -37,7 +37,9 @@ pub fn render_app(f: &mut Frame, state: &AppState) {
     render_footer(f, state, chunks[2]);
 
     // 4. Overlays
-    if state.show_boxscore {
+    if state.show_team_picker {
+        render_team_picker(f, state, size);
+    } else if state.show_boxscore {
         render_boxscore(f, state, size);
     }
 

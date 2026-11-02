@@ -6,3 +6,4 @@ pub mod help;
 pub mod layout;
 pub mod leaders;
 pub mod standings;
+pub mod team_picker;

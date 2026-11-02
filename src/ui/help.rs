@@ -57,6 +57,10 @@ pub fn render_help(f: &mut Frame, area: Rect) {
             Span::styled("  Tab / s / g   ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
             Span::raw("Toggle between Skaters and Goalies in Leaders view"),
         ]),
+        Line::from(vec![
+            Span::styled("  f             ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw("Change Favorite Team (e.g. Baton Rouge Kingfish)"),
+        ]),
         Line::raw(""),
         Line::from(vec![
             Span::styled("  r             ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
