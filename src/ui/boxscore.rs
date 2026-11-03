@@ -2,7 +2,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table},
+    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table},
     Frame,
 };
 
@@ -127,8 +127,21 @@ pub fn render_boxscore(f: &mut Frame, state: &AppState, area: Rect) {
         f.render_widget(stats_p, chunks[2]);
 
         // 4. Play-by-play events
+        let total_plays = box_data.plays.len();
+        // Visible height minus 2 (borders) and 1 (header row)
+        let visible_height = (chunks[3].height.saturating_sub(3) as usize).max(1);
+        let max_scroll = total_plays.saturating_sub(visible_height);
+        let current_scroll = state.boxscore_scroll.min(max_scroll);
+        let end_idx = (current_scroll + visible_height).min(total_plays);
+
+        let visible_slice = if total_plays > 0 {
+            &box_data.plays[current_scroll..end_idx]
+        } else {
+            &[]
+        };
+
         let mut play_rows = Vec::new();
-        for p in &box_data.plays {
+        for p in visible_slice {
             let event_style = match p.event_type.as_str() {
                 "Goal" => Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
                 "Penalty" => Style::default().fg(Color::Red),
@@ -144,6 +157,17 @@ pub fn render_boxscore(f: &mut Frame, state: &AppState, area: Rect) {
             ]));
         }
 
+        let title = if total_plays > visible_height {
+            format!(
+                " Play-by-Play (showing {}-{} of {} events | [j/k, ▲/▼] Scroll) ",
+                current_scroll + 1,
+                end_idx,
+                total_plays
+            )
+        } else {
+            format!(" Play-by-Play ({} events) ", total_plays)
+        };
+
         let plays_table = Table::new(
             play_rows,
             [
@@ -154,8 +178,17 @@ pub fn render_boxscore(f: &mut Frame, state: &AppState, area: Rect) {
             ],
         )
         .header(Row::new(vec!["Time", "Event", "Team", "Description"]).style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)))
-        .block(Block::default().borders(Borders::ALL).title(format!(" Play-by-Play ({} events) ", box_data.plays.len())));
+        .block(Block::default().borders(Borders::ALL).title(title));
         f.render_widget(plays_table, chunks[3]);
+
+        if total_plays > visible_height {
+            let mut scrollbar_state = ScrollbarState::new(max_scroll).position(current_scroll);
+            let scrollbar = Scrollbar::default()
+                .orientation(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(Some("▲"))
+                .end_symbol(Some("▼"));
+            f.render_stateful_widget(scrollbar, chunks[3], &mut scrollbar_state);
+        }
     } else {
         let no_data_p = Paragraph::new(vec![
             Line::raw(""),
@@ -166,11 +199,14 @@ pub fn render_boxscore(f: &mut Frame, state: &AppState, area: Rect) {
 
     // 5. Modal Footer
     let footer_p = Paragraph::new(Line::from(vec![
-        Span::styled(" Press ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[Esc]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-        Span::styled(" or ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[q]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-        Span::styled(" to return to Games list", Style::default().fg(Color::White)),
+        Span::styled(" [j/k, ▲/▼]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" Scroll  "),
+        Span::styled("[PgUp/PgDn]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" Page  "),
+        Span::styled("[g/G]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" Top/End  "),
+        Span::styled("[Esc/q]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" Close"),
     ]));
     f.render_widget(footer_p, chunks[4]);
 }

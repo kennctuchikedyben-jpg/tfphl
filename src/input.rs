@@ -25,8 +25,29 @@ pub fn handle_key(key: KeyEvent, state: &mut AppState) -> Action {
     }
 
     if state.show_boxscore {
-        if matches!(key.code, KeyCode::Esc | KeyCode::Char('q')) {
-            state.show_boxscore = false;
+        match key.code {
+            KeyCode::Esc | KeyCode::Char('q') => {
+                state.show_boxscore = false;
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                state.scroll_boxscore_down(1);
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                state.scroll_boxscore_up(1);
+            }
+            KeyCode::PageDown => {
+                state.scroll_boxscore_down(10);
+            }
+            KeyCode::PageUp => {
+                state.scroll_boxscore_up(10);
+            }
+            KeyCode::Home | KeyCode::Char('g') => {
+                state.scroll_boxscore_top();
+            }
+            KeyCode::End | KeyCode::Char('G') => {
+                state.scroll_boxscore_bottom();
+            }
+            _ => {}
         }
         return Action::None;
     }
@@ -114,6 +135,7 @@ pub fn handle_key(key: KeyEvent, state: &mut AppState) -> Action {
                 let maybe_game_id = state.selected_game().map(|g| g.game_id);
                 if let Some(game_id) = maybe_game_id {
                     state.show_boxscore = true;
+                    state.boxscore_scroll = 0;
                     return Action::FetchBoxscore(game_id);
                 }
             }

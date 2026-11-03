@@ -262,6 +262,47 @@ mod tests {
         let _ = cfg.save();
     }
 
+    #[test]
+    fn test_boxscore_scrolling() {
+        use models::boxscore::{GameBoxscore, PlayEvent};
+
+        let mut state = AppState::new(Config::default());
+        let mut plays = Vec::new();
+        for i in 0..50 {
+            plays.push(PlayEvent {
+                period: "1st".to_string(),
+                time: format!("{:02}:00", i),
+                event_type: "Shot".to_string(),
+                team: "BKF".to_string(),
+                description: format!("Play event {}", i),
+            });
+        }
+
+        state.boxscore_data = Some(GameBoxscore {
+            away_team: "BKF".to_string(),
+            home_team: "IND".to_string(),
+            away_score: 3,
+            home_score: 2,
+            venue: "Arena".to_string(),
+            date_time_str: "2026-10-31".to_string(),
+            periods: vec![],
+            shots: vec![],
+            power_plays: ("-".to_string(), "-".to_string()),
+            penalty_minutes: ("-".to_string(), "-".to_string()),
+            plays,
+        });
+
+        assert_eq!(state.boxscore_scroll, 0);
+        state.scroll_boxscore_down(5);
+        assert_eq!(state.boxscore_scroll, 5);
+        state.scroll_boxscore_up(2);
+        assert_eq!(state.boxscore_scroll, 3);
+        state.scroll_boxscore_bottom();
+        assert_eq!(state.boxscore_scroll, 49);
+        state.scroll_boxscore_top();
+        assert_eq!(state.boxscore_scroll, 0);
+    }
+
     #[tokio::test]
     async fn test_auth_login() {
         let mut client = HockeyShiftClient::new();

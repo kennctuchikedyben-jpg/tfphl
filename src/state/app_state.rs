@@ -93,6 +93,7 @@ pub struct AppState {
     pub show_boxscore: bool,
     pub boxscore_data: Option<GameBoxscore>,
     pub boxscore_loading: bool,
+    pub boxscore_scroll: usize,
     pub show_help: bool,
     pub show_team_picker: bool,
     pub team_picker_idx: usize,
@@ -118,6 +119,7 @@ impl AppState {
             show_boxscore: false,
             boxscore_data: None,
             boxscore_loading: false,
+            boxscore_scroll: 0,
             show_help: false,
             show_team_picker: false,
             team_picker_idx: 0,
@@ -250,6 +252,31 @@ impl AppState {
             LeadersTab::Goalies => LeadersTab::Skaters,
         };
         self.selected_leader_idx = 0;
+    }
+
+    pub fn scroll_boxscore_down(&mut self, amount: usize) {
+        if let Some(ref box_data) = self.boxscore_data {
+            let total = box_data.plays.len();
+            if self.boxscore_scroll + amount < total {
+                self.boxscore_scroll += amount;
+            } else {
+                self.boxscore_scroll = total.saturating_sub(1);
+            }
+        }
+    }
+
+    pub fn scroll_boxscore_up(&mut self, amount: usize) {
+        self.boxscore_scroll = self.boxscore_scroll.saturating_sub(amount);
+    }
+
+    pub fn scroll_boxscore_top(&mut self) {
+        self.boxscore_scroll = 0;
+    }
+
+    pub fn scroll_boxscore_bottom(&mut self) {
+        if let Some(ref box_data) = self.boxscore_data {
+            self.boxscore_scroll = box_data.plays.len().saturating_sub(1);
+        }
     }
 
     pub fn open_team_picker(&mut self) {
