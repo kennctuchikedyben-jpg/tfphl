@@ -1,15 +1,14 @@
 use std::collections::BTreeSet;
 use chrono::Local;
 
-use crate::{
-    models::{
-        boxscore::GameBoxscore,
-        games::Game,
-        leaders::{GoalieLeader, SkaterLeader},
-        standings::Division,
-    },
-    state::config::Config,
+use crate::models::{
+    boxscore::GameBoxscore,
+    games::Game,
+    leaders::{GoalieLeader, SkaterLeader},
+    roster::Roster,
+    standings::Division,
 };
+use crate::state::config::Config;
 
 pub const FPHL_TEAMS: &[(&str, &str)] = &[
     ("BKF", "Baton Rouge Kingfish"),
@@ -31,6 +30,34 @@ pub const FPHL_TEAMS: &[(&str, &str)] = &[
     ("WTW", "Watertown Wolves"),
     ("", "None (Clear favorite)"),
 ];
+
+// Numeric team id used by the roster API. Keyed by the short code shown in FPHL_TEAMS.
+pub const TEAM_IDS: &[(&str, u64)] = &[
+    ("BKF", 684206),
+    ("BBB", 684207),
+    ("BRB", 684208),
+    ("TCT", 684205),
+    ("CRD", 684203),
+    ("DHT", 684210),
+    ("FRF", 684285),
+    ("IND", 684211),
+    ("MSM", 684284),
+    ("MNL", 684281),
+    ("MRM", 684200),
+    ("MCR", 684212),
+    ("OCS", 684287),
+    ("PHP", 684213),
+    ("SCK", 684286),
+    ("TOP", 684214),
+    ("WTW", 684215),
+];
+
+pub fn team_id_for(code: &str) -> Option<u64> {
+    TEAM_IDS
+        .iter()
+        .find(|(c, _)| c.eq_ignore_ascii_case(code))
+        .map(|(_, id)| *id)
+}
 
 pub fn is_favorite_team(fav: Option<&str>, team_short: &str, team_name: &str) -> bool {
     let fav_code = match fav {
@@ -69,6 +96,7 @@ pub enum Tab {
     Games,
     Standings,
     Leaders,
+    Roster,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -99,6 +127,9 @@ pub struct AppState {
     pub team_picker_idx: usize,
     pub loading: bool,
     pub error_message: Option<String>,
+    pub roster_data: Option<Roster>,
+    pub roster_loading: bool,
+    pub roster_team_id: u64,
 }
 
 impl AppState {
@@ -125,7 +156,14 @@ impl AppState {
             team_picker_idx: 0,
             loading: true,
             error_message: None,
+            roster_data: None,
+            roster_loading: false,
+            roster_team_id: 684206,
         }
+    }
+
+    pub fn roster(&self) -> Option<&Roster> {
+        self.roster_data.as_ref()
     }
 
     pub fn set_games(&mut self, games: Vec<Game>) {
@@ -222,6 +260,9 @@ impl AppState {
                     self.selected_leader_idx += 1;
                 }
             }
+            Tab::Roster => {
+                // Roster list navigation
+            }
         }
     }
 
@@ -242,6 +283,9 @@ impl AppState {
                 if self.selected_leader_idx > 0 {
                     self.selected_leader_idx -= 1;
                 }
+            }
+            Tab::Roster => {
+                // Roster list navigation
             }
         }
     }

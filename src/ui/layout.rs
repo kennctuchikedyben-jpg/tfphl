@@ -7,7 +7,7 @@ use crate::{
     state::app_state::{AppState, Tab},
     ui::{
         boxscore::render_boxscore, footer::render_footer, games::render_games, header::render_header,
-        help::render_help, leaders::render_leaders, standings::render_standings, team_picker::render_team_picker,
+        help::render_help, leaders::render_leaders, standings::render_standings, team_picker::render_team_picker, team_roster::render_team_roster,
     },
 };
 
@@ -31,6 +31,7 @@ pub fn render_app(f: &mut Frame, state: &AppState) {
         Tab::Games => render_games(f, state, chunks[1]),
         Tab::Standings => render_standings(f, state, chunks[1]),
         Tab::Leaders => render_leaders(f, state, chunks[1]),
+        Tab::Roster => render_team_roster(f, state, chunks[1]),
     }
 
     // 3. Footer

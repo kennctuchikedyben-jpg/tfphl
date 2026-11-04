@@ -8,6 +8,7 @@ pub enum Action {
     Quit,
     RefreshAll,
     FetchBoxscore(u64),
+    FetchRoster,
 }
 
 pub fn handle_key(key: KeyEvent, state: &mut AppState) -> Action {
@@ -81,6 +82,13 @@ pub fn handle_key(key: KeyEvent, state: &mut AppState) -> Action {
             state.open_team_picker();
             Action::None
         }
+        KeyCode::Char('F') => {
+            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                return Action::FetchRoster;
+            }
+            state.open_team_picker();
+            Action::None
+        }
         KeyCode::Char('r') => Action::RefreshAll,
 
         // Tab switching
@@ -94,6 +102,16 @@ pub fn handle_key(key: KeyEvent, state: &mut AppState) -> Action {
         }
         KeyCode::Char('3') => {
             state.active_tab = Tab::Leaders;
+            Action::None
+        }
+        KeyCode::Char('4') => {
+            state.active_tab = Tab::Roster;
+            if let Some(id) = crate::state::app_state::team_id_for(
+                state.config.favorite_team.as_deref().unwrap_or(""),
+            ) {
+                state.roster_team_id = id;
+                return Action::FetchRoster;
+            }
             Action::None
         }
 

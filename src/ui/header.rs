@@ -42,6 +42,8 @@ pub fn render_header(f: &mut Frame, state: &AppState, area: Rect) {
         Span::raw("   "),
         Span::styled("[3] Leaders", tab_style(Tab::Leaders)),
         Span::raw("   "),
+        Span::styled("[4] Roster", tab_style(Tab::Roster)),
+        Span::raw("   "),
         Span::styled("[?] Help", Style::default().fg(Color::DarkGray)),
     ]);
     let tabs_p = Paragraph::new(tabs_line)

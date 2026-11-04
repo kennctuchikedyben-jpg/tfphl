@@ -23,6 +23,8 @@ pub fn render_footer(f: &mut Frame, state: &AppState, area: Rect) {
         Line::from(vec![
             Span::styled("[1-3]", Style::default().fg(Color::Yellow)),
             Span::raw(" Tabs  "),
+            Span::styled("[4]", Style::default().fg(Color::Yellow)),
+            Span::raw(" Roster  "),
             Span::styled("[h/l, ◄/►]", Style::default().fg(Color::Yellow)),
             Span::raw(" Date  "),
             Span::styled("[t]", Style::default().fg(Color::Yellow)),

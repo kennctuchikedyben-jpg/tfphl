@@ -7,6 +7,7 @@ use crate::models::{
     boxscore::{GameBoxscore, PeriodScore, PlayEvent},
     games::Game,
     leaders::{GoalieLeader, SkaterLeader},
+    roster::{Player, Roster},
     standings::{Division, StandingRow},
 };
 
@@ -472,6 +473,96 @@ impl HockeyShiftClient {
             .ok_or_else(|| anyhow!("Empty play-by-play content"))?;
 
         Self::parse_boxscore_html(&html_content)
+    }
+
+    pub async fn fetch_roster(&mut self, team_id: u64) -> Result<Roster> {
+        let ticket = self.ensure_ticket().await?;
+        let url = format!(
+            "{}/partials/stats/team/roster?team_id={}&season_id={}&league_id={}",
+            BASE_URL, team_id, SEASON_ID, LEAGUE_ID
+        );
+
+        let resp = self
+            .client
+            .get(&url)
+            .headers(self.auth_headers(&ticket)?)
+            .send()
+            .await
+            .context("Failed to fetch team roster partial")?;
+
+        let partial: PartialResponse = resp.json().await?;
+        let html_content = partial
+            .content
+            .ok_or_else(|| anyhow!("Empty roster content"))?;
+
+        Self::parse_roster_html(&html_content)
+    }
+
+    pub fn parse_roster_html(html: &str) -> Result<Roster> {
+        let document = Html::parse_document(html);
+        let table_selector = Selector::parse("table").unwrap();
+        let tr_selector = Selector::parse("tr").unwrap();
+        let td_selector = Selector::parse("td").unwrap();
+        let a_selector = Selector::parse("a.person-inline").unwrap();
+
+        // Find the roster table (the first table with player rows)
+        let mut players = Vec::new();
+
+        for table in document.select(&table_selector) {
+            for tr in table.select(&tr_selector) {
+                let tds: Vec<_> = tr.select(&td_selector).collect();
+                if tds.len() < 10 {
+                    continue;
+                }
+
+                // Skip header row (has "#" in first cell)
+                let first_cell = tds[0].text().collect::<String>().trim().to_string();
+                if first_cell == "#" {
+                    continue;
+                }
+
+                // Check if this is a team staff row (has "Trainer", "Manager", etc.)
+                let position_text = tds[2].text().collect::<String>().trim().to_string();
+                if position_text.contains("Trainer") || position_text.contains("Manager") || position_text.contains("Coach") || position_text.contains("Owner") || position_text.contains("GM") {
+                    continue;
+                }
+
+                let number = tds[0].text().collect::<String>().trim().to_string();
+                let name = tds[1]
+                    .select(&a_selector)
+                    .next()
+                    .map(|a| a.text().collect::<String>().trim().to_string())
+                    .unwrap_or_else(|| tds[1].text().collect::<String>().trim().to_string());
+                let position = tds[2].text().collect::<String>().trim().to_string();
+                let experience = tds[3].text().collect::<String>().trim().to_string();
+                let birthday = tds[4].text().collect::<String>().trim().to_string();
+                let shoots = tds[5].text().collect::<String>().trim().to_string();
+                let height = tds[6].text().collect::<String>().trim().to_string();
+                let weight = tds[7].text().collect::<String>().trim().to_string();
+                let hometown = tds[8].text().collect::<String>().trim().to_string();
+
+                players.push(Player {
+                    number,
+                    name,
+                    position,
+                    experience,
+                    birthday,
+                    shoots,
+                    height,
+                    weight,
+                    hometown,
+                    team: String::new(),
+                });
+            }
+            if !players.is_empty() {
+                break;
+            }
+        }
+
+        Ok(Roster {
+            team_name: String::new(),
+            players,
+        })
     }
 
     pub fn parse_boxscore_html(html: &str) -> Result<GameBoxscore> {

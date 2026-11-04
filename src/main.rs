@@ -22,6 +22,7 @@ use crate::{
         boxscore::GameBoxscore,
         games::Game,
         leaders::{GoalieLeader, SkaterLeader},
+        roster::Roster,
         standings::Division,
     },
     state::{app_state::AppState, config::Config},
@@ -33,6 +34,7 @@ enum DataEvent {
     Standings(Result<Vec<Division>>),
     Leaders(Result<(Vec<SkaterLeader>, Vec<GoalieLeader>)>),
     Boxscore(Result<GameBoxscore>),
+    Roster(Result<Roster>),
 }
 
 #[tokio::main]
@@ -145,6 +147,17 @@ async fn main() -> Result<()> {
                             }
                         }
                     }
+                    DataEvent::Roster(res) => {
+                        state.roster_loading = false;
+                        match res {
+                            Ok(roster) => {
+                                state.roster_data = Some(roster);
+                            }
+                            Err(e) => {
+                                state.error_message = Some(format!("Failed to load roster: {}", e));
+                            }
+                        }
+                    }
                 }
             }
 
@@ -166,6 +179,18 @@ async fn main() -> Result<()> {
                                 let mut client = HockeyShiftClient::new();
                                 let res = client.fetch_boxscore(game_id).await;
                                 let _ = tx_clone.send(DataEvent::Boxscore(res)).await;
+                            });
+                        }
+                        Action::FetchRoster => {
+                            state.roster_loading = true;
+                            state.roster_data = None;
+                            state.error_message = None;
+                            let team_id = state.roster_team_id;
+                            let tx_clone = tx.clone();
+                            tokio::spawn(async move {
+                                let mut client = HockeyShiftClient::new();
+                                let res = client.fetch_roster(team_id).await;
+                                let _ = tx_clone.send(DataEvent::Roster(res)).await;
                             });
                         }
                         Action::None => {}
@@ -337,6 +362,31 @@ mod tests {
         assert!(skaters.is_ok(), "Failed to fetch skaters: {:?}", skaters.err());
         let list = skaters.unwrap();
         assert!(!list.is_empty(), "Skaters list was empty");
+    }
+
+    #[test]
+    fn test_roster_fetches_favorite_on_4() {
+        use crate::state::app_state::{AppState, Tab};
+        use crate::state::config::Config;
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+        let mut cfg = Config::default();
+        cfg.favorite_team = Some("FRF".to_string());
+        let mut state = AppState::new(cfg);
+
+        let key = KeyEvent::new(KeyCode::Char('4'), KeyModifiers::NONE);
+        crate::input::handle_key(key, &mut state);
+
+        assert_eq!(state.active_tab, Tab::Roster);
+        assert_eq!(state.roster_team_id, 684285);
+
+        // Default favorite (BKF) keeps BKF team id
+        let mut state2 = AppState::new(Config::default());
+        crate::input::handle_key(
+            KeyEvent::new(KeyCode::Char('4'), KeyModifiers::NONE),
+            &mut state2,
+        );
+        assert_eq!(state2.roster_team_id, 684206);
     }
 
     #[tokio::test]
