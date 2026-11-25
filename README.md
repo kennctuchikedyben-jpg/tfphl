@@ -96,3 +96,8 @@ log_level = "error"       # Logging verbosity
 - `SCK` — Stockton Thunder
 - `WTW` — Watertown Wolves
 - `FRF` — Fresno Falcons
+
+
+
+## Mobile App
+The tfphl file located under the mobile folder can be loaded on Android devices and run with Termux.  It's the same app, but it required a different version of wget that was mobile compliant to work with android.  Android has some other requirements as well as it has to be compiled to run on arm systems rather and x86.
